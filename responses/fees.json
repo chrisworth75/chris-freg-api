@@ -1,27 +1,27 @@
   [
     {
-      "id": "FEE0123",
+      "code": "FEE0123",
       "value": 10,
-      "category": "draft"
+      "status": "draft"
     },
     {
-      "id": "FEE0124",
+      "code": "FEE0124",
       "value": 20,
-      "category": "approved"
+      "status": "draft"
     },
     {
-      "id": "FEE0125",
+      "code": "FEE0125",
       "value": 30,
-      "category": "live"
+      "status": "approved"
     },
     {
-      "id": "FEE0126",
+      "code": "FEE0126",
       "value": 40,
-      "category": "live"
+      "status": "live"
     },
     {
-      "id": "FEE0127",
+      "code": "FEE0127",
       "value": 50,
-      "category": "live"
+      "status": "live"
     }
   ]
