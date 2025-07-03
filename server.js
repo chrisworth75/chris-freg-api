@@ -2,6 +2,8 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const pool = require('./db'); // adjust path if needed
+
 
 
 // Create an express app
@@ -10,11 +12,19 @@ app.use(cors()); // Allow all origins — for dev only
 app.use(express.json()); // Parse JSON bodies
 
 
-app.get('/fees', (req, res) => {
+app.get('/fees', async (req, res) => {
     // Send the HTML file as a response
-    console.log('we got a request for fees');
-    const filePath = path.join(__dirname, 'responses/fees.json');
-    res.sendFile(filePath);
+    // console.log('we got a request for fees');
+    // const filePath = path.join(__dirname, 'responses/fees.json');
+    // res.sendFile(filePath);
+    try {
+        const result = await pool.query('SELECT * FROM fees ORDER BY id');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+
+
 });
 
 app.get('/fee/:code', (req, res) => {
