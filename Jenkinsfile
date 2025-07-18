@@ -1,17 +1,30 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "host.docker.internal:5000/chris-freg-api"
+        IMAGE_TAG = "latest"
+    }
+
     stages {
-        stage('Install') {
+        stage('Checkout') {
             steps {
-                sh 'npm ci'
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("backend:latest")
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push to Local Registry') {
+            steps {
+                script {
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
