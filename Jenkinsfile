@@ -7,15 +7,27 @@ pipeline {
     }
 
     stages {
-   checkout([
-     $class: 'GitSCM',
-     branches: [[name: '*/main']],
-     userRemoteConfigs: [[
-       url: 'https://github.com/chrisworth75/chris-freg-api.git',
-       credentialsId: '6205b4c9-56e2-485b-a394-9c28c576a131'
-     ]]
-   ])
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh "npm install"
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    sh "npm test"
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
