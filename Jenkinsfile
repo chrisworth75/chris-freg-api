@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -5,6 +6,7 @@ pipeline {
         PATH = "/Users/chris/.nvm/versions/node/v18.17.1/bin:$PATH"
         IMAGE_NAME = "host.docker.internal:5000/chris-freg-api"
         IMAGE_TAG = "latest"
+        CONTAINER_NAME = "chris-freg-api-test"
     }
 
     stages {
@@ -22,8 +24,6 @@ pipeline {
             }
         }
 
-        
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -36,6 +36,22 @@ pipeline {
             steps {
                 script {
                     sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Run Container from Image') {
+            steps {
+                script {
+                    sh """
+                        # Stop & remove if already running
+                        docker rm -f ${CONTAINER_NAME} || true
+                        # Run detached, mapping port 3000 on host to port 3000 in container
+                        docker run -d --name ${CONTAINER_NAME} -p 3000:3000 ${IMAGE_NAME}:${IMAGE_TAG}
+                        # Optionally, wait and check logs
+                        sleep 5
+                        docker logs ${CONTAINER_NAME}
+                    """
                 }
             }
         }
