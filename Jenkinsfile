@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        PATH = "/Users/chris/.nvm/versions/node/v18.17.1/bin:$PATH"
         IMAGE_NAME = "host.docker.internal:5000/chris-freg-api"
         IMAGE_TAG = "latest"
     }
