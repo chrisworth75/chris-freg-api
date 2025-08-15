@@ -14,7 +14,7 @@ RUN npm ci
 COPY . .
 
 # App port (update if your Express app uses a different one)
-EXPOSE 8080
+EXPOSE 8081
 
 # Start the backend (assumes "start" script in package.json)
 CMD ["npm", "start"]
