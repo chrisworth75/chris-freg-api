@@ -165,6 +165,6 @@ app.post('/reset-db', async (req, res) => {
 
 
 // Set the app to listen on port 3000
-app.listen(3001, () => {
-    console.log('Server running on http://localhost:3001');
+app.listen(8080, () => {
+    console.log('Server running on http://localhost:8080');
 });

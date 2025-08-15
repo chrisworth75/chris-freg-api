@@ -48,7 +48,7 @@ stage('Run Container from Image') {
                 docker rm -f ${CONTAINER_NAME} || true
 
                 # Run detached, mapping host:3000 to container:3001
-                docker run -d --name ${CONTAINER_NAME} -p 3000:3001 ${IMAGE_NAME}:${IMAGE_TAG}
+                docker run -d --name ${CONTAINER_NAME} -p 8080:8080 ${IMAGE_NAME}:${IMAGE_TAG}
 
                 # Wait for the app to start
                 sleep 5
@@ -57,7 +57,7 @@ stage('Run Container from Image') {
                 docker logs ${CONTAINER_NAME}
 
                 # Test endpoint
-                curl -f http://localhost:3000/fees || (echo 'API check failed' && exit 1)
+                curl -f http://localhost:8080/fees || (echo 'API check failed' && exit 1)
             """
         }
     }
