@@ -40,20 +40,28 @@ pipeline {
             }
         }
 
-        stage('Run Container from Image') {
-            steps {
-                script {
-                    sh """
-                        # Stop & remove if already running
-                        docker rm -f ${CONTAINER_NAME} || true
-                        # Run detached, mapping port 3000 on host to port 3000 in container
-                        docker run -d --name ${CONTAINER_NAME} -p 3000:3000 ${IMAGE_NAME}:${IMAGE_TAG}
-                        # Optionally, wait and check logs
-                        sleep 5
-                        docker logs ${CONTAINER_NAME}
-                    """
-                }
-            }
+stage('Run Container from Image') {
+    steps {
+        script {
+            sh """
+                # Stop & remove if already running
+                docker rm -f ${CONTAINER_NAME} || true
+
+                # Run detached, mapping host:3000 to container:3001
+                docker run -d --name ${CONTAINER_NAME} -p 3000:3001 ${IMAGE_NAME}:${IMAGE_TAG}
+
+                # Wait for the app to start
+                sleep 5
+
+                # Show container logs
+                docker logs ${CONTAINER_NAME}
+
+                # Test endpoint
+                curl -f http://localhost:3000/fees || (echo 'API check failed' && exit 1)
+            """
         }
+    }
+}
+
     }
 }
