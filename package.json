@@ -2,7 +2,9 @@
   "name": "chris-freg-api",
   "version": "1.0.0",
   "main": "server.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node server.js"
+  },
   "author": "",
   "license": "ISC",
   "description": "",
