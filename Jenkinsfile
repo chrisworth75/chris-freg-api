@@ -65,6 +65,12 @@ pipeline {
                         docker rm postgres-prod || true
                     """
 
+                    // Clean up any existing postgres containers using port 5432
+                    sh """
+                        docker ps -a --filter "publish=5432" --format "{{.Names}}" | xargs -r docker stop || true
+                        docker ps -a --filter "publish=5432" --format "{{.Names}}" | xargs -r docker rm || true
+                    """
+                    
                     // Start production database
                     sh """
                         docker run -d \\
