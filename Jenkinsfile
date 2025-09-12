@@ -1,18 +1,16 @@
+// Jenkinsfile in chris-freg-api repository
 pipeline {
     agent any
 
     environment {
-        IMAGE_NAME      = "host.docker.internal:5000/chris-freg-api"
-        IMAGE_TAG       = "latest"
-        CONTAINER_NAME  = "chris-freg-api-test"
-        HOST_PORT       = "5100"
-        CONTAINER_PORT  = "8081"
-        DB_CONTAINER    = "freg-db"
-        DB_NAME         = "fees"
-        DB_USER         = "postgres"
-        DB_PASSWORD     = "postgres"
-        DB_PORT         = "5432"
-        NETWORK_NAME    = "freg-network"
+        REGISTRY = 'localhost:5000'
+        IMAGE_NAME = 'chris-freg-api'
+        NODE_VERSION = '18'
+        DB_CONTAINER = 'postgres-test'
+    }
+
+    tools {
+        nodejs "${NODE_VERSION}"
     }
 
     stages {
@@ -22,71 +20,159 @@ pipeline {
             }
         }
 
+        stage('Setup Test Database') {
+            steps {
+                script {
+                    // Start test database container
+                    sh """
+                        docker stop ${DB_CONTAINER} || true
+                        docker rm ${DB_CONTAINER} || true
+                        docker run -d \\
+                        --name ${DB_CONTAINER} \\
+                        --platform=linux/arm64 \\
+                        -e POSTGRES_PASSWORD=postgres \\
+                        -e POSTGRES_DB=test_db \\
+                        -p 5433:5432 \\
+                        postgres:15-alpine
+                    """
+
+                    // Wait for database to be ready
+                    sh 'sleep 10'
+                    sh 'docker exec ${DB_CONTAINER} pg_isready -U postgres'
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Quality Checks') {
+            parallel {
+                stage('Lint') {
+                    steps {
+                        sh 'npm run lint'
+                    }
+                }
+                stage('Security Audit') {
+                    steps {
+                        sh 'npm audit --audit-level moderate'
+                    }
+                }
+                stage('Unit Tests') {
+                    steps {
+                        sh '''
+                            export DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_db"
+                            npm test
+                        '''
+                    }
+                    post {
+                        always {
+                            publishTestResults testResultsPattern: 'test-results.xml'
+                        }
+                    }
+                }
+                stage('Integration Tests') {
+                    steps {
+                        sh '''
+                            export DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_db"
+                            npm run test:integration
+                        '''
+                    }
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                script {
+                    def image = docker.build("${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
+                    docker.withRegistry("http://${REGISTRY}") {
+                        image.push()
+                        image.push('latest')
+                    }
+                }
             }
         }
 
-        stage('Push to Local Registry') {
+        stage('Container Security Scan') {
             steps {
-                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                script {
+                    // Use trivy for container scanning (install via brew on Mac)
+                    sh """
+                        trivy image --exit-code 0 --severity HIGH,CRITICAL \\
+                        ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
+                    """
+                }
             }
         }
 
-        stage('Ensure Network') {
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
             steps {
-                sh '''
-                    if ! docker network ls --format '{{.Name}}' | grep -w ${NETWORK_NAME}; then
-                        docker network create ${NETWORK_NAME}
-                    fi
-                '''
+                script {
+                    // Stop existing containers
+                    sh """
+                        docker stop ${IMAGE_NAME} || true
+                        docker rm ${IMAGE_NAME} || true
+                        docker stop postgres-prod || true
+                        docker rm postgres-prod || true
+                    """
+
+                    // Start production database
+                    sh """
+                        docker run -d \\
+                        --name postgres-prod \\
+                        --platform=linux/arm64 \\
+                        -e POSTGRES_PASSWORD=prodpassword \\
+                        -e POSTGRES_DB=freg_prod \\
+                        -p 5432:5432 \\
+                        -v postgres-data:/var/lib/postgresql/data \\
+                        postgres:15-alpine
+                    """
+
+                    sleep 10
+
+                    // Run API container
+                    sh """
+                        docker run -d \\
+                        --name ${IMAGE_NAME} \\
+                        --restart unless-stopped \\
+                        -p 3000:3000 \\
+                        --link postgres-prod:db \\
+                        -e DATABASE_URL="postgresql://postgres:prodpassword@db:5432/freg_prod" \\
+                        -e NODE_ENV=production \\
+                        ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
+                    """
+                }
             }
         }
 
-        stage('Ensure Database') {
-            steps {
-                sh '''
-                    if ! docker ps --format '{{.Names}}' | grep -w ${DB_CONTAINER}; then
-                        echo "Database container not running — starting one..."
-                        docker run -d                             --name ${DB_CONTAINER}                             --network ${NETWORK_NAME}                             -e POSTGRES_DB=${DB_NAME}                             -e POSTGRES_USER=${DB_USER}                             -e POSTGRES_PASSWORD=${DB_PASSWORD}                             -p ${DB_PORT}:${DB_PORT}                             postgres:15
-                        sleep 10
-                    fi
-                '''
+        stage('Health Check') {
+            when {
+                branch 'main'
             }
-        }
-
-        stage('Run API Container') {
             steps {
-                sh '''
-                    # Stop & remove old container if exists
-                    docker rm -f ${CONTAINER_NAME} || true
-
-                    # Run fresh container linked to db
-                    docker run -d --name ${CONTAINER_NAME}                         --network ${NETWORK_NAME}                         -p ${HOST_PORT}:${CONTAINER_PORT}                         -e DB_HOST=${DB_CONTAINER}                         -e DB_PORT=${DB_PORT}                         -e DB_USER=${DB_USER}                         -e DB_PASSWORD=${DB_PASSWORD}                         -e DB_NAME=${DB_NAME}                         ${IMAGE_NAME}:${IMAGE_TAG}
-
-                    # Wait for app to start
-                    sleep 5
-
-                    # Show container status + logs
-                    docker ps --filter "name=${CONTAINER_NAME}"
-                    docker logs ${CONTAINER_NAME} | tail -n 20
-
-                    # Smoke check on /fees
-                    if curl -fsS http://localhost:${HOST_PORT}/fees >/dev/null; then
-                      echo "Smoke check OK"
-                    else
-                      echo "Smoke check FAILED"
-                      exit 1
-                    fi
-                '''
+                script {
+                    sleep 15
+                    sh 'curl -f http://localhost:3000/health || exit 1'
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline finished for ${CONTAINER_NAME}"
+            // Cleanup test database
+            sh """
+                docker stop ${DB_CONTAINER} || true
+                docker rm ${DB_CONTAINER} || true
+            """
+            cleanWs()
         }
     }
 }

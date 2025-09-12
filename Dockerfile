@@ -1,20 +1,26 @@
-# Use Node.js 22.3 base image
-FROM node:22.3
+# Dockerfile for chris-freg-api - ARM64 optimized
+FROM --platform=linux/arm64 node:18-alpine AS build
 
-# Set working directory
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+FROM --platform=linux/arm64 node:18-alpine AS runtime
+
+# Create app user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S apiuser -u 1001
+
 WORKDIR /app
 
-# Copy dependency files first for better cache usage
-COPY package*.json ./
+# Copy dependencies and app
+COPY --from=build --chown=apiuser:nodejs /app/node_modules ./node_modules
+COPY --chown=apiuser:nodejs . .
 
-# Install dependencies
-RUN npm ci
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
+  CMD curl -f http://localhost:3000/health || exit 1
 
-# Copy remaining app files
-COPY . .
-
-# App port (update if your Express app uses a different one)
-EXPOSE 8081
-
-# Start the backend (assumes "start" script in package.json)
-CMD ["npm", "start"]
+USER apiuser
+EXPOSE 3000
+CMD ["node", "server.js"]
