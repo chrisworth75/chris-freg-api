@@ -164,7 +164,8 @@ app.post('/reset-db', async (req, res) => {
 });
 
 
-// Set the app to listen on port 5100
-app.listen(5100, () => {
-    console.log('Server running on http://localhost:5100');
+const PORT = process.env.PORT || 8081;
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
+
