@@ -6,7 +6,7 @@ pipeline {
         IMAGE_NAME = "host.docker.internal:5000/chris-freg-api"
         IMAGE_TAG = "latest"
         CONTAINER_NAME = "chris-freg-api-test"
-        HOST_PORT = "5000"   // Backend API standard range
+        HOST_PORT = "5100"   // Backend API standard range
         CONTAINER_PORT = "8081"
     }
 
