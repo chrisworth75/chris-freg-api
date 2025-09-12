@@ -96,7 +96,7 @@ pipeline {
                         --name ${IMAGE_NAME} \\
                         --restart unless-stopped \\
                         --network freg-network \\
-                        -p 3000:3000 \\
+                        -p 5100:3000 \\
                         -e DB_HOST=freg-db \\
                         -e DB_PORT=5432 \\
                         -e DB_NAME=fees \\
@@ -116,7 +116,7 @@ pipeline {
             steps {
                 script {
                     sleep 15
-                    sh 'curl -f http://localhost:3000/health || echo "Health check failed - API may still be starting"'
+                    sh 'curl -f http://localhost:5100/health || echo "Health check failed - API may still be starting"'
                 }
             }
         }
