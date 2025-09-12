@@ -57,42 +57,51 @@ pipeline {
             }
             steps {
                 script {
+                    // Create network for container communication
+                    sh """
+                        docker network create freg-network || echo "Network already exists"
+                    """
+
                     // Stop existing containers
                     sh """
                         docker stop ${IMAGE_NAME} || true
                         docker rm ${IMAGE_NAME} || true
-                        docker stop postgres-prod || true
-                        docker rm postgres-prod || true
+                        docker stop freg-db || true
+                        docker rm freg-db || true
                     """
 
-                    // Clean up any existing postgres containers using port 5432
-                    sh """
-                        docker ps -a --filter "publish=5432" --format "{{.Names}}" | xargs -r docker stop || true
-                        docker ps -a --filter "publish=5432" --format "{{.Names}}" | xargs -r docker rm || true
-                    """
-                    
-                    // Start production database
+                    // Start database with correct name and settings
                     sh """
                         docker run -d \\
-                        --name postgres-prod \\
+                        --name freg-db \\
                         --platform=linux/arm64 \\
-                        -e POSTGRES_PASSWORD=prodpassword \\
-                        -e POSTGRES_DB=freg_prod \\
-                        -p 5432:5432 \\
-                        -v postgres-data:/var/lib/postgresql/data \\
+                        --network freg-network \\
+                        -e POSTGRES_PASSWORD=postgres \\
+                        -e POSTGRES_DB=fees \\
+                        -p 5435:5432 \\
                         postgres:15-alpine
                     """
 
                     sleep 10
+
+                    // Initialize database schema and data
+                    sh """
+                        docker exec -i freg-db psql -U postgres -d fees < /Users/chris/dev/chris-freg-db/db-init/01-schema.sql
+                        docker exec -i freg-db psql -U postgres -d fees < /Users/chris/dev/chris-freg-db/db-init/02-data.sql
+                    """
 
                     // Run API container
                     sh """
                         docker run -d \\
                         --name ${IMAGE_NAME} \\
                         --restart unless-stopped \\
+                        --network freg-network \\
                         -p 3000:3000 \\
-                        --link postgres-prod:db \\
-                        -e DATABASE_URL="postgresql://postgres:prodpassword@db:5432/freg_prod" \\
+                        -e DB_HOST=freg-db \\
+                        -e DB_PORT=5432 \\
+                        -e DB_NAME=fees \\
+                        -e DB_USER=postgres \\
+                        -e DB_PASSWORD=postgres \\
                         -e NODE_ENV=production \\
                         ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
                     """
