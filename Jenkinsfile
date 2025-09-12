@@ -5,12 +5,7 @@ pipeline {
     environment {
         REGISTRY = 'localhost:5000'
         IMAGE_NAME = 'chris-freg-api'
-        NODE_VERSION = '18'
         DB_CONTAINER = 'postgres-test'
-    }
-
-    tools {
-        nodejs "${NODE_VERSION}"
     }
 
     stages {
@@ -167,12 +162,13 @@ pipeline {
 
     post {
         always {
-            // Cleanup test database
-            sh """
-                docker stop ${DB_CONTAINER} || true
-                docker rm ${DB_CONTAINER} || true
-            """
-            cleanWs()
+            script {
+                // Cleanup test database
+                sh """
+                    docker stop postgres-test || true
+                    docker rm postgres-test || true
+                """
+            }
         }
     }
 }
