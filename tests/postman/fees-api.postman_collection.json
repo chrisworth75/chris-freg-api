@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "Fees API",
+    "description": "API tests for chris-freg-api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Reset Database (Setup)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Database reset returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reset-db",
+          "host": ["{{baseUrl}}"],
+          "path": ["reset-db"]
+        }
+      }
+    },
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Health check returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Health check returns healthy status', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.status).to.eql('healthy');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Get All Fees",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get fees returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response is an array', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Response time is less than 2000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/fees",
+          "host": ["{{baseUrl}}"],
+          "path": ["fees"]
+        }
+      }
+    },
+    {
+      "name": "Create Fee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Create fee returns 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response contains created fee', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('fee');",
+              "    pm.expect(response.fee).to.have.property('code');",
+              "    pm.expect(response.fee.code).to.eql('TEST001');",
+              "});",
+              "",
+              "// Store the created fee code for cleanup",
+              "const response = pm.response.json();",
+              "if (response.fee && response.fee.code) {",
+              "    pm.environment.set('createdFeeCode', response.fee.code);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"TEST001\",\n  \"value\": 100.50,\n  \"description\": \"Test fee for API testing\",\n  \"status\": \"active\",\n  \"type\": \"fixed\",\n  \"service\": \"kylie\",\n  \"jurisdiction1\": \"bonnie\",\n  \"jurisdiction2\": \"tom\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/fee",
+          "host": ["{{baseUrl}}"],
+          "path": ["fee"]
+        }
+      }
+    },
+    {
+      "name": "Get Fee by Code",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get fee by code returns 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response contains correct fee', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('code');",
+              "    pm.expect(response.code).to.eql('TEST001');",
+              "    pm.expect(response).to.have.property('value');",
+              "    pm.expect(parseFloat(response.value)).to.eql(100.5);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/fee/TEST001",
+          "host": ["{{baseUrl}}"],
+          "path": ["fee", "TEST001"]
+        }
+      }
+    },
+    {
+      "name": "Create Duplicate Fee (Should Fail)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Duplicate fee returns 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "",
+              "pm.test('Response contains error message', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.error).to.include('already exists');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"TEST001\",\n  \"value\": 200.00,\n  \"description\": \"Duplicate test fee\",\n  \"status\": \"active\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/fee",
+          "host": ["{{baseUrl}}"],
+          "path": ["fee"]
+        }
+      }
+    },
+    {
+      "name": "Create Fee with Invalid Data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Invalid fee data returns 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Response contains validation error', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('error');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"INVALID\",\n  \"value\": \"not-a-number\",\n  \"description\": 123,\n  \"status\": \"invalid-status\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/fee",
+          "host": ["{{baseUrl}}"],
+          "path": ["fee"]
+        }
+      }
+    },
+    {
+      "name": "Get Non-existent Fee",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Non-existent fee returns 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test('Response contains not found error', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response).to.have.property('error');",
+              "    pm.expect(response.error).to.include('not found');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/fee/NONEXISTENT",
+          "host": ["{{baseUrl}}"],
+          "path": ["fee", "NONEXISTENT"]
+        }
+      }
+    }
+  ]
+}

@@ -5,8 +5,11 @@
   "scripts": {
     "start": "node server.js",
     "lint": "echo 'No linting configured yet' && exit 0",
-    "test": "echo 'No tests configured yet' && exit 0",
-    "test:integration": "echo 'No integration tests configured yet' && exit 0"
+    "test": "npm run test:api",
+    "test:api": "newman run tests/postman/fees-api.postman_collection.json -e tests/environments/local.postman_environment.json --reporters cli,json --reporter-json-export test-results.json",
+    "test:api:docker": "newman run tests/postman/fees-api.postman_collection.json -e tests/environments/docker.postman_environment.json --reporters cli,json --reporter-json-export test-results.json",
+    "test:integration": "npm run test:api:docker",
+    "test:wait-and-run": "sleep 10 && npm run test:api:docker"
   },
   "author": "",
   "license": "ISC",
@@ -16,5 +19,8 @@
     "dotenv": "^17.0.1",
     "express": "^4.21.2",
     "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "newman": "^6.2.1"
   }
 }
