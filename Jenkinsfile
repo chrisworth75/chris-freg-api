@@ -141,13 +141,26 @@ pipeline {
             }
             steps {
                 script {
-                    // Install Newman if not already available
-                    sh 'npm install --save-dev newman || echo "Newman already installed"'
-
-                    // Run the comprehensive test suite
+                    // Use Docker to run Newman tests to avoid Node.js environment issues
                     sh '''
-                        echo "🧪 Running API test suite..."
-                        npm run test:api:docker
+                        echo "🧪 Running API test suite using Docker..."
+
+                        # Run Newman in a Docker container to avoid environment issues
+                        docker run --rm \\
+                            --network host \\
+                            -v "$(pwd)/tests:/tests" \\
+                            -v "$(pwd)/package.json:/package.json" \\
+                            --workdir / \\
+                            node:18-alpine sh -c "
+                                npm install -g newman
+                                newman run /tests/postman/fees-api.postman_collection.json \\
+                                    -e /tests/environments/docker.postman_environment.json \\
+                                    --reporters cli,json \\
+                                    --reporter-json-export /tests/test-results.json
+                            "
+
+                        # Copy results back to workspace
+                        cp tests/test-results.json . || echo "No test results file found"
                     '''
                 }
             }
