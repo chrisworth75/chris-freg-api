@@ -115,8 +115,52 @@ pipeline {
             }
             steps {
                 script {
-                    sleep 15
-                    sh 'curl -f http://localhost:5100/health || echo "Health check failed - API may still be starting"'
+                    // Wait for API to be healthy with retries
+                    sh '''
+                        echo "⏳ Waiting for API to be healthy..."
+                        for i in {1..30}; do
+                            if curl -f -s http://localhost:5100/health > /dev/null 2>&1; then
+                                echo "✅ API is healthy after $((i * 10)) seconds"
+                                break
+                            elif [ $i -eq 30 ]; then
+                                echo "❌ API failed to become healthy after 300 seconds"
+                                exit 1
+                            else
+                                echo "⏳ Attempt $i/30: API not ready, waiting 10s..."
+                                sleep 10
+                            fi
+                        done
+                    '''
+                }
+            }
+        }
+
+        stage('API Tests') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    // Install Newman if not already available
+                    sh 'npm install --save-dev newman || echo "Newman already installed"'
+
+                    // Run the comprehensive test suite
+                    sh '''
+                        echo "🧪 Running API test suite..."
+                        npm run test:api:docker
+                    '''
+                }
+            }
+            post {
+                always {
+                    // Archive test results
+                    archiveArtifacts artifacts: 'test-results.json', allowEmptyArchive: true
+                }
+                success {
+                    echo '✅ All API tests passed!'
+                }
+                failure {
+                    echo '❌ API tests failed - check test results'
                 }
             }
         }
