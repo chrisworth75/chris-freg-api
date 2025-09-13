@@ -1,0 +1,107 @@
+Started by user chris
+Connecting to https://api.github.com using chrisworth75/******
+Obtained Jenkinsfile from 917da385e97dd7ae934569cf93cb39ee6c4e3f18
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /Users/chris/.jenkins/workspace/chris-freg-api_main
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential f734d068-5336-46a9-abf5-f9c2cb494d0f
+ > git rev-parse --resolve-git-dir /Users/chris/.jenkins/workspace/chris-freg-api_main/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/chrisworth75/chris-freg-api.git # timeout=10
+Fetching without tags
+Fetching upstream changes from https://github.com/chrisworth75/chris-freg-api.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5 (Apple Git-154)'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/chrisworth75/chris-freg-api.git +refs/heads/main:refs/remotes/origin/main # timeout=10
+Checking out Revision 917da385e97dd7ae934569cf93cb39ee6c4e3f18 (main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 917da385e97dd7ae934569cf93cb39ee6c4e3f18 # timeout=10
+Commit message: "gpt"
+ > git rev-list --no-walk 917da385e97dd7ae934569cf93cb39ee6c4e3f18 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+The recommended git tool is: NONE
+using credential f734d068-5336-46a9-abf5-f9c2cb494d0f
+ > git rev-parse --resolve-git-dir /Users/chris/.jenkins/workspace/chris-freg-api_main/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/chrisworth75/chris-freg-api.git # timeout=10
+Fetching without tags
+Fetching upstream changes from https://github.com/chrisworth75/chris-freg-api.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5 (Apple Git-154)'
+using GIT_ASKPASS to set credentials 
+ > git fetch --no-tags --force --progress -- https://github.com/chrisworth75/chris-freg-api.git +refs/heads/main:refs/remotes/origin/main # timeout=10
+Checking out Revision 917da385e97dd7ae934569cf93cb39ee6c4e3f18 (main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 917da385e97dd7ae934569cf93cb39ee6c4e3f18 # timeout=10
+Commit message: "gpt"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install Dependencies)
+[Pipeline] sh
++ npm install
+/Users/chris/.jenkins/workspace/chris-freg-api_main@tmp/durable-4d4fb5d0/script.sh.copy: line 1: npm: command not found
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Docker Image)
+Stage "Build Docker Image" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Push to Local Registry)
+Stage "Push to Local Registry" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Ensure Network)
+Stage "Ensure Network" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Ensure Database)
+Stage "Ensure Database" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Run API Container)
+Stage "Run API Container" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] echo
+Pipeline finished for chris-freg-api-test
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 127
+
+GitHub has been notified of this commit’s build result
+
+Finished: FAILURE

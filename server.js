@@ -11,6 +11,9 @@ const app = express();
 app.use(cors()); // Allow all origins — for dev only
 app.use(express.json()); // Parse JSON bodies
 
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'healthy' });
+});
 
 app.get('/fees', async (req, res) => {
     // Send the HTML file as a response
