@@ -28,7 +28,7 @@ pipeline {
                         --platform=linux/arm64 \\
                         -e POSTGRES_PASSWORD=postgres \\
                         -e POSTGRES_DB=test_db \\
-                        -p 5433:5432 \\
+                        -p 5437:5432 \\
                         postgres:15-alpine
                     """
 
