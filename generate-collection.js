@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Get configuration from environment variables or use defaults
-const BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081';
+const BASE_URL = process.env.API_BASE_URL || 'http://localhost:5100';
 const COLLECTION_NAME = process.env.COLLECTION_NAME || 'Chris FREG API Collection';
 const BUILD_NUMBER = process.env.BUILD_NUMBER || 'dev';
 
