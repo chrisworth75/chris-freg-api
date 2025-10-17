@@ -5,8 +5,10 @@
   "scripts": {
     "start": "node server.js",
     "lint": "echo 'No linting configured yet' && exit 0",
+    "build:collection": "node generate-collection.js",
     "test": "npm run test:api",
-    "test:api": "newman run tests/postman/fees-api.postman_collection.json -e tests/environments/local.postman_environment.json --reporters cli,json --reporter-json-export test-results.json",
+    "test:api": "npm run build:collection && newman run build/api-collection.json",
+    "test:api:old": "newman run tests/postman/fees-api.postman_collection.json -e tests/environments/local.postman_environment.json --reporters cli,json --reporter-json-export test-results.json",
     "test:api:docker": "newman run tests/postman/fees-api.postman_collection.json -e tests/environments/docker.postman_environment.json --reporters cli,json --reporter-json-export test-results.json",
     "test:integration": "npm run test:api:docker",
     "test:wait-and-run": "sleep 10 && npm run test:api:docker"
