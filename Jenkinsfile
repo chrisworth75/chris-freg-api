@@ -110,12 +110,12 @@ pipeline {
                         postgres:15-alpine
                     """
 
-                    sleep 10
+                    sh 'sleep 10'
 
                     // Initialize database schema and data
                     sh """
-                        docker exec -i freg-db psql -U postgres -d fees < /Users/chris/dev/chris-freg-db/db-init/01-schema.sql
-                        docker exec -i freg-db psql -U postgres -d fees < /Users/chris/dev/chris-freg-db/db-init/02-data.sql
+                        cat db-init/01-schema.sql | docker exec -i freg-db psql -U postgres -d fees
+                        cat db-init/02-data.sql | docker exec -i freg-db psql -U postgres -d fees
                     """
 
                     // Run API container
