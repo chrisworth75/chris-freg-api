@@ -85,6 +85,12 @@ pipeline {
             }
             steps {
                 script {
+                    // Kill any process using port 5100
+                    sh """
+                        echo "Killing any process using port 5100..."
+                        lsof -ti:5100 | xargs kill -9 || true
+                    """
+
                     // Create network for container communication
                     sh """
                         docker network create freg-network || echo "Network already exists"
