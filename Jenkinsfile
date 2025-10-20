@@ -152,7 +152,7 @@ pipeline {
                     // Wait for API to be healthy with retries
                     sh '''
                         echo "⏳ Waiting for API to be healthy..."
-                        for i in {1..30}; do
+                        for i in $(seq 1 30); do
                             if curl -f -s http://localhost:5100/health > /dev/null 2>&1; then
                                 echo "✅ API is healthy after $((i * 10)) seconds"
                                 break
